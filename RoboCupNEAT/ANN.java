@@ -62,8 +62,8 @@ public class ANN implements Comparable
         //Collections.sort(outputsList);
         inputs = new Node[inputsList.size()];
         outputs = new Node[outputsList.size()];
-        if(inputsList.size() > 2){
-            System.out.println("inputsss   " + inputsList.size());
+        if(outputsList.size() > 2){
+            //System.out.println("outputsss   " + outputsList.size()+"      " + outputs.length);
         }
         for(int i = 0; i < inputs.length; i++){
             //id = i+1
@@ -83,7 +83,7 @@ public class ANN implements Comparable
                 //inputs[inputs.length-1] = new Node(inputs.length, NodeType.BIAS);
         }
         for(int i = 0; i < outputs.length; i++){
-            outputs[i] = outputsList.get(i);
+            //outputs[i] = outputsList.get(i);
             Node minId = outputsList.get(0);
             for(Node out: outputsList){
                 if(out.id < minId.id){

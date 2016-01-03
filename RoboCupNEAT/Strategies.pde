@@ -167,47 +167,39 @@ public static class Strategies{
      moveTo(angle, speed, theta, speedOfRotation, robot);
   }
   
-  public static void moveToRelative(float x, float y, float speed, float speedOfRotation, Robot robot){
-     float m = (y)/(x+0.000001);
-     float angle = degrees(atan(m))+45-robot._theta;
-     if(x < 0){
-       angle+=180;
-     }
-     angle = angle%360;
-     if(x == 0 && y == 0) speed = 0;
-     //println(m);
-     moveToRotation(angle, speed, speedOfRotation, robot);
-  }
-  
-  static void moveTo(float angle, float speed, float theta, float speedOfRotation, Robot robot){
+  public static void moveTo(float angle, float speed, float theta, float speedOfRotation, Robot robot){
      float a = cos(radians(angle)) * speed;
      float b = sin(radians(angle)) * speed;
      float d1 = a+(theta-robot._theta)*speedOfRotation;
      float d2 = a-(theta-robot._theta)*speedOfRotation;
      float d3 = b+(theta-robot._theta)*speedOfRotation;
      float d4 = b-(theta-robot._theta)*speedOfRotation;
-     robot.move(d1, d2, d3, d4);
-}  
-
-  static void moveToRotation(float angle, float speed, float speedOfRotation, Robot robot){
-     float a = cos(radians(angle)) * speed;
-     float b = sin(radians(angle)) * speed;
-     float d1 = a+speedOfRotation;
-     float d2 = a-speedOfRotation;
-     float d3 = b+speedOfRotation;
-     float d4 = b-speedOfRotation;
-     robot.move(d1, d2, d3, d4);
-}  
+     robot.move(d1, d2, d3, d4); 
+     //appendTextToFile("data.csv", regressionPoints(robot, robot1, ball, angle, speed, theta));
+     
+  }
   
- static void moveTo(float angle, float speed, float theta, Robot robot){
+  public static void moveTo(float angle, float speed, float theta, Robot robot){
     if(speed > 3) speed = 3;
     else if(speed < -3) speed = -3;
      float a = cos(radians(angle)) * speed;
      float b = sin(radians(angle)) * speed;
-     float d1 = a+(theta-robot._theta)*0.1;
-     float d2 = a-(theta-robot._theta)*0.1;
-     float d3 = b+(theta-robot._theta)*0.1;
-     float d4 = b-(theta-robot._theta)*0.1;
+     float d1 = a+(theta-robot._theta)*2;
+     float d2 = a-(theta-robot._theta)*2;
+     float d3 = b+(theta-robot._theta)*2;
+     float d4 = b-(theta-robot._theta)*2;
+     robot.move(d1, d2, d3, d4); 
+  }
+  
+  public static void moveToWithoutControl(float angle, float speed, float omega, Robot robot){
+     if(speed > 3) speed = 3;
+     else if(speed < -3) speed = -3;
+     float a = cos(radians(angle)) * speed;
+     float b = sin(radians(angle)) * speed;
+     float d1 = a+omega;
+     float d2 = a-omega;
+     float d3 = b+omega;
+     float d4 = b-omega;
      robot.move(d1, d2, d3, d4); 
   }
   
@@ -259,7 +251,22 @@ public static class Strategies{
      return m;
   }
   
-  
+  public static void move(ANN ann, Robot r){
+    float[] state = new float[6];
+    state[0] = r._x/(244*4);
+    state[1] = r._y/(182*4);
+    state[2] = r._theta/360;
+    state[3] = s.ball.getX()/(244*4);
+    state[4] = s.ball.getY()/(182*4);
+    state[5] = r.holdsBall(s.ball.getX(), s.ball.getY())? 0 : 1;
+    float[] out = ann.step(state);
+    float vx = out[0]*3;
+    float vy = out[1]*3;
+    float w = out[2]*2;
+    float angle = degrees(atan2(vy, vx));
+    float v = sqrt(vx*vx+vy*vy);
+    moveToWithoutControl(angle, v, w, r);
+  }
   
   
   public static float[][] policyGradient(float [] thetaA, float [] thetaB, float [] thetaC, Robot robot, Robot robot1, Ball ball){

@@ -21,7 +21,7 @@ public class Population
     float maxFitness;
     Population(int initialSize, ANN emptyANN, FitnessEvaluator fitnessEvaluator){
         this.fitnessEvaluator = fitnessEvaluator;
-        maxFitness = 0;//cant be negative!!!!!!
+        maxFitness = Float.MIN_VALUE;//cant be negative!!!!!!
         species = new ArrayList<Specie>();
         emptyANN.fitness = fitnessEvaluator.getFitness(emptyANN);
         for(int i = 0; i < initialSize; i++){
@@ -36,6 +36,8 @@ public class Population
         List<ANN> offsprings = new ArrayList<ANN>();
         long fitnessSum = 0;
         float maxF = 0;
+        float averageF = 0;
+        float counter = 0;
         for(Specie s: species){
             fitnessSum += s.expAdjustedFitnessSum();
         }
@@ -45,6 +47,8 @@ public class Population
                 if(best.fitness < ann.fitness){
                     best = ann;
                 }
+                averageF += ann.fitness;
+                counter++;
             }
             if(best.fitness > maxF){
                 offsprings.add(best);
@@ -71,7 +75,8 @@ public class Population
         }
         
         //System.out.println(species.size());
-        System.out.println("generation " + generation + "  max fitness " +maxFitness+"   species  " + species.size() + "  max connections   " + maxConnections);
+        averageF /= counter;
+        System.out.println("generation " + generation + "  max fitness " +maxFitness+"   species  " + species.size() + "  max connections   " + maxConnections + "  average fitness " + averageF);
         updateAdjustedFitness();
         generation++;
         if(maxFitness == 0){

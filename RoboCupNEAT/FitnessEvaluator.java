@@ -9,3 +9,5 @@ public interface FitnessEvaluator
 {
     public abstract float getFitness(ANN ann);
 }
+
+

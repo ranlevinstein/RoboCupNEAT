@@ -1,8 +1,3 @@
-import shiffman.box2d.*;
-import org.jbox2d.collision.shapes.*;
-import org.jbox2d.common.*;
-import org.jbox2d.dynamics.*;
-import org.jbox2d.dynamics.contacts.*;
 
 
 public class Simulator{
@@ -21,10 +16,7 @@ public class Simulator{
   int lastWin = 0;//0 tie 1 blue 2 yellow
   int totalSteps = 0;
   Ball ball;
-  float[] state = new float[17];
-  float stateDegree = 1;
-  //float[] polyState = new float[(int)(state.length*(state.length+1)/2)];
-  float[] polyState = new float[17];
+  
   
   public Simulator(PApplet p){
   smooth();
@@ -55,57 +47,43 @@ public class Simulator{
     robot1 = new Robot(244*2+250, 182*2, -90, 90, 2, 105.2, 364, box2d, 1, 870.8, 364);
     createBlueGoal(105.2, 364);
     createYellowGoal(870.8, 364);
-    //createBall(random(width-(240*3), 240*3), random(height-(200*3), 200*3));
-    createBall(244*2+random(-100, 100), 182*2+random(-100, 100));
-    ball.setPosition(244*2+random(-100, 100), 182*2+random(-100, 100));
-    updateState();
+    createBall(random(width-(240*3), 240*3), random(height-(200*3), 200*3));
+
   }
   
   public void init(){
       needToInit = false;
-      
-      ball.setPosition(244*2+random(-100, 100), 182*2+random(-100, 100));
-      
+      ball.setPosition(random(width-(240*3), 240*3), random(height-(200*3), 200*3));
+      //ball.setPosition(random(240*2, 240*3), random(height-(200*3), 200*3));
+      //ball.setPosition(random(240, 240 *1.4), random(height-(200*3), 200*3));
+      //ball.setPosition(200*2, 182*2);
       ball.body.setLinearVelocity(new Vec2(0, 0));
-      
-      
       robot.setPosition(244*2-250, 182*2, 90);
-
-      robot1.setPosition(244*2+250, 182*2, -90);
-      
-      
+      robot1.setPosition(100, 100, 0);
+      //robot1.setPosition(244*2+250, 182*2, -90);
       steps = 0;
       //robot = new Robot(244*2-250, 182*2, 90, 90, 2, 870.8, 364, box2d);
       //robot1 = new Robot(244*2+250, 182*2, 0, 90, 2, 105.2, 364, box2d);
       robot.isDead = false;
       robot1.isDead = false;
-      updateState();
+      
   }
   public void step(){
-    if(steps > 1800){//1250 for normal game
+    if(steps > 2500){//1250 for normal game
       steps = 0;
       ties++;
       needToInit = true;
       lastWin = 0;
      }
-    if(needToInit || (robot.isDead && robot1.isDead)){
-      
-      //init();
-      //println("blue: " + goalsBlue + " yellow: " + goalsYellow + " ties: " + ties + " games: " + (goalsBlue+goalsYellow+ties) + " stpes: " + totalSteps); 
-    }
-    
-    //change to enable out of field.
-    //robot.isDead = outOfField(robot); 
-    //robot1.isDead = outOfField(robot1); 
-    
-    
-    
+    /*if(needToInit || (robot.isDead && robot1.isDead)){
+      init();
+      println("blue: " + goalsBlue + " yellow: " + goalsYellow + " ties: " + ties + " games: " + (goalsBlue+goalsYellow+ties) + " stpes: " + totalSteps); 
+    }*/
+    robot.isDead = outOfField(robot); 
+    robot1.isDead = outOfField(robot1); 
     box2d.step();
-    updateState();
-    //Strategies.optimal1(robot, 3);
-    //Strategies.optimal1(robot1, 3);
-    //robot.move(0,0,0,0);
-    //robot1.move(0,0,0,0);
+    robot.move(0,0,0,0);
+    robot1.move(0,0,0,0);
     
       
     
@@ -113,92 +91,28 @@ public class Simulator{
     totalSteps++;
  }
  
-   void playStep(Strategy s){
-     step();
-      float ballY = ball.getY();
-      float ballX = ball.getX();
-      float m = (ballY-robot._goalY)/(ballX-robot._goalX);
-      float heading = degrees(atan(-m)) + 90;
-      float angle = s.run(polyState);
-      for(int i = 0; i < 1; i++){
-      Strategies.moveTo(angle, 3, heading, robot);
-      Strategies.optimal1(robot1, 3);//2.8 good
-      }
-   }
-
-  float play(Strategy s){
-    init(); 
-    if(steps > 1800){//1250 for normal game
-      steps = 0;
-      ties++;
-      needToInit = true;
-      lastWin = 0;
-     }
-    while(!needToInit){
-      playStep(s);
-      //println(lastWin);
-    }
-    return lastWin;
-  }
-  
-  
-  float play(Strategy s, int matches){
-   float score = 0;
-    for(int i = 0 ; i < matches; i++){
-      score += play(s);
-    }
-    if (score > 0) return score;//1
-    else return -1;
-    //return score;
-  }
-  
-  
-  void updateState(){
-    state[0] = robot._x;
-    state[1] = robot._y;
-    state[2] = robot.getVelocityX();
-    state[3] = robot.getVelocityY();
-    state[4] = robot._theta;
-    state[5] = robot1._x;
-    state[6] = robot1._y;
-    state[7] = robot1.getVelocityX();
-    state[8] = robot1.getVelocityY();
-    state[9] = ball.getX();
-    state[10] = ball.getY();
-    state[11] = ball.body.getLinearVelocity().x;
-    state[12] = ball.body.getLinearVelocity().y;
-    state[13] = robot.holdsBall(ball.getX(), ball.getY())? 0 : 300;
-    state[14] = 1; 
-    float m = (state[10]-robot._y)/(state[9]-robot._x);
-     float angle = degrees(atan(m))+45-robot._theta;
-     if(state[9]-robot._x < 0){
-       angle+=180;
-     }
-    angle = angle%360;
-    state[15] = angle; 
-    
-    float mGoal = (robot._goalY-robot._y)/(robot._goalX-robot._x);
-     float angleGoal = degrees(atan(mGoal))+45-robot._theta;
-     if(robot._goalX-robot._x < 0){
-       angleGoal+=180;
-     }
-     angleGoal = angleGoal%360;
-     state[16] = angleGoal;
-     //state[17] = sqrt((state[9]-robot._x)*(state[9]-robot._x) + (state[10]-robot._y)*(state[10]-robot._y));
-     updatePolyState();
-  }
  
-   void updatePolyState(){
-       int counter = 0;
-     for(int i = 0; i < state.length; i++){
-       //for(int j = i; j < state.length; j++){
-           polyState[counter] = state[i];//*state[j];
-           counter++;
-       //}
+   public int game(ANN ann){
+     init();
+     float y = goalsYellow;
+     float b = goalsBlue;
+     while(!needToInit){
+       Strategies.move(ann, robot);
+       step();
      }
-     
+     //init();
+     if(goalsYellow > y) return 1;
+     if(goalsBlue > b) return -1;
+     return 0;
    }
- 
+   
+   public int game(ANN ann, int matches){
+     int score = 0;
+     for(int i = 0; i < matches; i++){
+      score += game(ann);
+     } 
+     return score;
+   }
  
  
   public boolean outOfField(Robot robot){
@@ -229,8 +143,7 @@ public class Simulator{
        fill(0, 102, 153);
        textSize(32);
        text("RoboCup Simulator", 10, 30); 
-
-       text(goalsYellow+"-"+goalsBlue, 700, 100);
+       
   
        stroke(255, 255, 255);
        
@@ -293,7 +206,8 @@ public class Simulator{
     //ball.setPosition(random(100, 500), random(100, 500));
   }
   }
-  //println(needToInit);
+  
+  
 }
 
 
